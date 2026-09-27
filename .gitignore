@@ -1,0 +1,25 @@
+# ── 部署产物：含本机路径和实时链接，不该进仓库 ──
+logs/
+public-url.txt
+last-public-url.txt
+
+# ── 测试 / 审计日志 ──
+*.log
+
+# ── 本地覆盖配置：可能含 API key，绝对不能提交 ──
+.env
+game/.env
+admin-token.txt
+
+# ── 运行时产物 ──
+*.crt
+*.key
+
+# ── 编辑器 / 系统 ──
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# 个人推广笔记：不对外开源
+文案与拍摄脚本.md

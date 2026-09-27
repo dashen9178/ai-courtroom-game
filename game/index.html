@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- interactive-widget=resizes-content：软键盘弹出时真的缩小布局视口。
+     不加这条，安卓上 100dvh 不变，底部输入框会被键盘盖住。 -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#0f0e0c">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<title>杠精法庭</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ① 首页 -->
+  <section id="screen-home" class="screen active">
+    <div class="home-wrap">
+      <div class="seal">法</div>
+      <h1 class="home-title">杠精法庭</h1>
+      <p class="home-sub">你被起诉了。罪名很荒谬，程序很严肃。</p>
+      <p class="home-sub dim">检察官会逐字引用你说的每一句话来打你。</p>
+
+      <div class="portrait" id="portrait" hidden>
+        <div class="portrait-head">今日主审</div>
+        <div class="portrait-body">
+          <span class="portrait-name" id="portrait-name"></span>
+          <span class="portrait-temper" id="portrait-temper"></span>
+        </div>
+        <div class="portrait-line" id="portrait-line"></div>
+      </div>
+
+      <div class="seed-pick">
+        <label class="seed-label" for="seed-input">案件主题（可留空）</label>
+        <input id="seed-input" type="text" maxlength="30" autocomplete="off"
+               placeholder="留空随机。例：外卖、群聊、物业、亲戚">
+      </div>
+
+      <div class="mode-pick">
+        <button class="mode-btn" data-mode="free">
+          <span class="mode-name">普通程序</span>
+          <span class="mode-desc">想辩多久辩多久，辩到你自己喊休庭</span>
+        </button>
+        <button class="mode-btn" data-mode="quick">
+          <span class="mode-name">速审程序</span>
+          <span class="mode-desc">5 句话定胜负，说完自动宣判</span>
+        </button>
+      </div>
+
+      <div class="think-pick" id="sev-pick" hidden>
+        <div class="think-head"><span>对抗强度</span></div>
+        <div class="think-opts" id="sev-opts"></div>
+        <div class="think-note" id="sev-note"></div>
+      </div>
+
+      <div class="think-pick" id="think-pick" hidden>
+        <div class="think-head"><span>深度思考</span></div>
+        <div class="think-opts" id="think-opts"></div>
+        <div class="think-note" id="think-note"></div>
+      </div>
+
+      <button class="ghost-btn" id="btn-again-case" hidden>换一个案子</button>
+      <p class="home-foot" id="home-foot">所有判决均为虚构，不构成任何法律意见。</p>
+    </div>
+  </section>
+
+  <!-- ② 庭审 -->
+  <section id="screen-trial" class="screen">
+    <header class="trial-head">
+      <button class="icon-btn" id="btn-dossier" title="卷宗">卷宗</button>
+      <div class="trial-head-mid">
+        <div class="trial-court" id="t-court"></div>
+        <div class="trial-case" id="t-case"></div>
+      </div>
+      <button class="icon-btn" id="btn-menu" title="菜单">⋯</button>
+    </header>
+
+    <div class="charge-bar">
+      <span class="charge-label">罪名</span>
+      <span class="charge-text" id="t-charge"></span>
+    </div>
+
+    <!-- 庭辩态势：一行，永远可见 -->
+    <div class="mood-bar" id="mood-bar">
+      <div class="mood-left">
+        <span class="mood-label">本庭态度</span>
+        <span class="mood-text" id="mood-text">胜负未分</span>
+      </div>
+      <div class="mood-track"><div class="mood-fill" id="mood-fill"></div></div>
+      <div class="mood-right"><span id="mood-pct">50%</span></div>
+    </div>
+
+    <!-- 状态汇总：一行，点开才展开全部面板（解决遮挡） -->
+    <button class="status-summary" id="status-summary" type="button" aria-expanded="false">
+      <span class="ss-caret" id="ss-caret">▾</span>
+      <span class="ss-items" id="ss-items"></span>
+      <span class="ss-hint" id="ss-hint">展开</span>
+    </button>
+
+    <div class="status-panel" id="status-panel" hidden>
+      <div class="evidence-bar" id="evidence-bar">
+        <span class="ev-label">检方证据</span>
+        <div class="ev-list" id="ev-list"></div>
+      </div>
+
+      <div class="grudge-panel" id="grudge-panel">
+        <div class="grudge-cols">
+          <div class="grudge-col" id="grudge-col-da" hidden>
+            <div class="grudge-head">
+              <span class="grudge-title">检察官的小本本</span>
+              <span class="grudge-count" id="grudge-count"></span>
+            </div>
+            <div class="grudge-list" id="grudge-list"></div>
+          </div>
+          <div class="grudge-col" id="grudge-col-judge" hidden>
+            <div class="grudge-head">
+              <span class="grudge-title judge">法官的扣分表</span>
+              <span class="grudge-count" id="ledger-count"></span>
+            </div>
+            <div class="grudge-list" id="ledger-list"></div>
+          </div>
+        </div>
+        <div class="clerk-row" id="clerk-row" hidden>
+          <span class="clerk-title">书记员笔录</span>
+          <span class="clerk-body" id="clerk-body"></span>
+        </div>
+      </div>
+    </div>
+
+    <main class="transcript" id="transcript"></main>
+
+    <footer class="trial-foot">
+      <div class="round-bar" id="round-bar" hidden>
+        <span id="round-text"></span>
+      </div>
+
+      <!-- 策略卡：点一下给这一轮定调（不额外花 AI 调用）-->
+      <div class="strat-row" id="strat-row">
+        <span class="strat-label">本轮策略</span>
+        <div class="strat-cards" id="strat-cards"></div>
+      </div>
+
+      <div class="input-row">
+        <textarea id="say" rows="1" placeholder="当庭辩护…（Enter 发言 / Shift+Enter 换行）"></textarea>
+        <button id="btn-say" class="primary-btn">发言</button>
+      </div>
+      <div class="foot-row">
+        <button class="verdict-btn" id="btn-exhibit">申请取证</button>
+        <button class="verdict-btn" id="btn-closing">结案陈词</button>
+        <button class="verdict-btn" id="btn-verdict">休庭 · 请求宣判</button>
+        <span class="foot-hint" id="foot-hint"></span>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ④ 判决书 -->
+  <section id="screen-verdict" class="screen">
+    <main class="verdict-scroll" id="verdict-scroll">
+      <article class="verdict-paper" id="verdict-paper">
+        <div class="verdict-court" id="v-court"></div>
+        <div class="verdict-outcome" id="v-outcome" hidden></div>
+        <h2 class="verdict-title" id="v-title"></h2>
+        <div class="verdict-retitle" id="v-retitle"></div>
+        <div class="verdict-sentence" id="v-sentence"></div>
+        <div class="verdict-body" id="v-body"></div>
+
+        <div class="verdict-block" id="v-quotes-block">
+          <div class="block-label">被告当庭金句</div>
+          <div id="v-quotes"></div>
+        </div>
+        <div class="verdict-block" id="v-da-block">
+          <div class="block-label">检察官致命一击</div>
+          <div class="block-quote" id="v-da"></div>
+        </div>
+        <div class="verdict-block" id="v-judge-block">
+          <div class="block-label">法官私评</div>
+          <div class="block-quote" id="v-judge-private"></div>
+        </div>
+        <div class="verdict-block" id="v-grudge-block">
+          <div class="block-label">检察官那笔旧账的最终清算</div>
+          <div class="block-quote" id="v-grudge"></div>
+        </div>
+        <div class="verdict-block" id="v-ledger-block">
+          <div class="block-label">被告的态度分折算</div>
+          <div class="block-quote" id="v-ledger"></div>
+        </div>
+        <div class="verdict-block" id="v-concur-block">
+          <div class="block-label">法官对检察官主张的态度</div>
+          <div class="concur-badge" id="v-concur"></div>
+        </div>
+        <div class="verdict-block" id="v-epi-block">
+          <div class="block-label">庭后花絮</div>
+          <div class="block-quote dim" id="v-epilogue"></div>
+        </div>
+        <div class="verdict-block" id="v-cred-block">
+          <div class="block-label">对被告当庭表现的总体评价</div>
+          <div class="block-quote" id="v-cred"></div>
+        </div>
+        <div class="verdict-block" id="v-clerk-block">
+          <div class="block-label">书记员记录的客观矛盾</div>
+          <div id="v-clerk"></div>
+        </div>
+        <div class="verdict-block" id="v-strat-block">
+          <div class="block-label">被告用过的庭辩策略</div>
+          <div class="block-quote" id="v-strat"></div>
+        </div>
+        <div class="verdict-block" id="v-exhibit-block">
+          <div class="block-label">被告申请调取的证据</div>
+          <div id="v-exhibit"></div>
+        </div>
+        <div class="verdict-block" id="v-witness-block">
+          <div class="block-label">出庭作证的证人</div>
+          <div id="v-witness"></div>
+        </div>
+        <div class="verdict-block" id="v-offscreen-block">
+          <div class="block-label">庭外</div>
+          <div id="v-offscreen"></div>
+        </div>
+        <div class="verdict-block" id="v-closing-block">
+          <div class="block-label">被告的结案陈词</div>
+          <div class="block-quote" id="v-closing"></div>
+        </div>
+        <div class="verdict-block" id="v-appeal-block" hidden>
+          <div class="block-label">上诉审裁定</div>
+          <div class="appeal-result" id="v-appeal-result"></div>
+          <div class="block-quote" id="v-appeal-text"></div>
+        </div>
+        <div class="verdict-score" id="v-score" hidden></div>
+        <div class="verdict-stats" id="v-stats"></div>
+        <div class="verdict-foot">本判决纯属虚构 · 杠精法庭</div>
+      </article>
+    </main>
+    <footer class="verdict-foot-bar">
+      <button class="primary-btn" id="btn-save-img">保存判决书图片</button>
+      <button class="ghost-btn" id="btn-appeal">当庭上诉</button>
+      <button class="ghost-btn" id="btn-copy">复制文字</button>
+      <button class="ghost-btn" id="btn-again">再来一案</button>
+    </footer>
+  </section>
+
+  <!-- ⑤ 卷宗抽屉 -->
+  <aside id="dossier" class="drawer">
+    <div class="drawer-head">
+      <span>本案卷宗</span>
+      <button class="icon-btn" id="btn-dossier-close">✕</button>
+    </div>
+    <div class="drawer-body" id="dossier-body"></div>
+  </aside>
+  <div id="scrim" class="scrim"></div>
+
+  <!-- ⑥ 菜单 -->
+  <aside id="menu" class="drawer drawer-right">
+    <div class="drawer-head">
+      <span>庭审控制</span>
+      <button class="icon-btn" id="btn-menu-close">✕</button>
+    </div>
+    <div class="drawer-body">
+      <button class="wide-btn" id="btn-menu-verdict">直接宣判</button>
+      <button class="wide-btn" id="btn-menu-restart">重新立案</button>
+      <div class="drawer-note" id="menu-note"></div>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- 通用输入弹窗（替代原生 prompt，手机上更好用） -->
+  <div class="modal-scrim" id="modal-scrim" hidden>
+    <div class="modal" id="modal" role="dialog" aria-modal="true">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-sub" id="modal-sub"></div>
+      <textarea id="modal-input" rows="4" placeholder="在这里写…"></textarea>
+      <div class="modal-tips" id="modal-tips"></div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="modal-cancel" type="button">取消</button>
+        <button class="primary-btn" id="modal-ok" type="button">提交</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
